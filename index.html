@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Support Activities</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f2f9f1;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- Modal Backdrop -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden items-center justify-center p-4 transition-opacity">
+        
+        <!-- Add New Engineer Name to Dropdown Modal -->
+        <div id="add-engineer-modal" class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="user-plus" class="w-5 h-5 text-blue-700"></i>
+                    Add Engineer Name
+                </h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-rose-600 p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-sm text-slate-600 mb-4">
+                Add a new engineer to the dropdown list. All engineers' records are saved together in <strong>One Single Master CSV Sheet</strong>.
+            </p>
+            <form id="add-engineer-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Engineer Name</label>
+                    <input type="text" id="new-engineer-name" placeholder="Enter Full Name" required
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeModals()" class="px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm font-bold text-white bg-blue-700 hover:bg-blue-800 rounded-xl shadow-sm transition">
+                        Add Name
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Generic Confirmation Dialog -->
+        <div id="confirm-modal" class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 hidden">
+            <div class="flex items-start gap-3 mb-4">
+                <div class="p-2.5 bg-rose-100 text-rose-600 rounded-xl shrink-0">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 id="confirm-title" class="text-base font-bold text-slate-900">Confirm Action</h3>
+                    <p id="confirm-message" class="text-sm text-slate-600 mt-1">Are you sure you want to proceed?</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeModals()" class="px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+                    Cancel
+                </button>
+                <button id="confirm-action-btn" class="px-4 py-2 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition">
+                    Yes, Proceed
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Formal Navy Operations Header -->
+    <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand & Master Workbook Title -->
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 text-white p-2.5 rounded-xl shadow-sm">
+                    <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">Daily Support Activities</h1>
+                    
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global CSV & Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2">
+                <input type="file" id="csv-file-input" accept=".csv,text/csv" class="hidden">
+
+                
+
+                <button onclick="openAddEngineerModal()" 
+                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>+ Add Engineer</span>
+                </button>
+
+                <button onclick="exportAllDataToCSV()" 
+                    class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Download All Data CSV</span>
+                </button>
+
+                <button onclick="clearAllDataPrompt()" 
+                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-200 bg-rose-950/60 hover:bg-rose-700 hover:text-white border border-rose-800/60 rounded-xl transition">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span>Clear All</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-5 space-y-5">
+
+        <!-- KPI Strip (Formal Corporate Cards) -->
+        <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Entries</p>
+                    <p id="stat-total-rows" class="text-2xl font-extrabold font-mono text-slate-900 mt-0.5">0</p>
+                </div>
+                <div class="p-2.5 bg-slate-100 text-slate-700 rounded-xl">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Active Engineers</p>
+                    <p id="stat-engineer-count" class="text-2xl font-extrabold font-mono text-blue-700 mt-0.5">0</p>
+                </div>
+                <div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Working Days</p>
+                    <p id="stat-working-days" class="text-2xl font-extrabold font-mono text-emerald-700 mt-0.5">0</p>
+                </div>
+                <div class="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl">
+                    <i data-lucide="briefcase" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Issues</p>
+                    <p id="stat-issue-count" class="text-2xl font-extrabold font-mono text-rose-600 mt-0.5">0</p>
+                </div>
+                <div class="p-2.5 bg-rose-50 text-rose-600 rounded-xl">
+                    <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sunday / Off</p>
+                    <p id="stat-off-days" class="text-2xl font-extrabold font-mono text-amber-600 mt-0.5">0</p>
+                </div>
+                <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+                    <i data-lucide="coffee" class="w-5 h-5"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Smart Data Entry Form Card -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <!-- Form Header & Quick Status Preset Chips -->
+            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <span id="form-mode-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-blue-700 text-white shadow-sm">
+                    </span>
+                </div>
+
+                <!-- Quick Status Chips -->
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1">Quick Presets:</span>
+                    <button type="button" onclick="applyStatusPreset('WORKING')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition">
+                        Working Day
+                    </button>
+                    <button type="button" onclick="applyStatusPreset('SUNDAY')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-700 text-white hover:bg-slate-800 transition">
+                        SUNDAY
+                    </button>
+                    <button type="button" onclick="applyStatusPreset('HOLIDAY')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-700 text-white hover:bg-slate-800 transition">
+                        HOLIDAY
+                    </button>
+                    <button type="button" onclick="applyStatusPreset('LEAVE')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-700 text-white hover:bg-slate-800 transition">
+                        LEAVE
+                    </button>
+                    <button type="button" onclick="applyStatusPreset('WEEK OFF')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-700 text-white hover:bg-slate-800 transition">
+                        WEEK OFF
+                    </button>
+                </div>
+            </div>
+
+            <form id="activity-entry-form" class="p-5 space-y-4">
+                <input type="hidden" id="edit-row-id" value="">
+
+                <!-- Row 1: ENGINEER NAME, DATE, DAYS, CUSTOMER, PROJECT (1st: PROJECT), LOCATION (1st: LOCATION) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3.5">
+                    <!-- 0. ENGINEER NAME -->
+                    <div>
+                        <label for="field-engineer" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            ENGINEER NAME <span class="text-rose-600">*</span>
+                        </label>
+                        <select id="field-engineer" required
+                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                        </select>
+                    </div>
+
+                    <!-- 1. DATE -->
+                    <div>
+                        <label for="field-date" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            DATE <span class="text-rose-600">*</span>
+                        </label>
+                        <input type="date" id="field-date" required
+                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                    </div>
+
+                    <!-- 2. DAYS -->
+                    <div>
+                        <label for="field-days" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+                            <span>DAYS</span>
+                            <span class="text-[10px] font-mono font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 rounded">AUTO</span>
+                        </label>
+                        <input type="text" id="field-days" required placeholder="MONDAY"
+                            class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-mono font-bold text-slate-800 uppercase focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    </div>
+
+                    <!-- 3. CUSTOMER -->
+                    <div>
+                        <label for="field-customer" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            CUSTOMER
+                        </label>
+                        <input type="text" id="field-customer" name="customer" value="Royal Enfield" readonly
+                            class="w-full rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 cursor-not-allowed focus:outline-none">
+                    </div>
+
+                    <!-- 4. PROJECT (Starts with PROJECT as 1st option) -->
+                    <div>
+                        <label for="field-project" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            PROJECT
+                        </label>
+                        <select id="field-project"
+                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            <option value="PROJECT" selected>PROJECT</option>
+                            <option value="VIN APPLICATION">VIN APPLICATION</option>
+                            <option value="EV APPLICATION">EV APPLICATION</option>
+                            <option value="CKD">CKD</option>
+                            <option value="EA APPLICATION">EA APPLICATION</option>
+                            <option value="DWI MAINLINE">DWI MAINLINE</option>
+                            <option value="NO Issue">NO Issue</option>
+                            <option value="-">-</option>
+                        </select>
+                    </div>
+
+                    <!-- 5. LOCATION (Starts with LOCATION as 1st option) -->
+                    <div>
+                        <label for="field-location" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            LOCATION
+                        </label>
+                        <select id="field-location"
+                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            <option value="LOCATION" selected>LOCATION</option>
+                            <option value="Vallam">Vallam</option>
+                            <option value="Oragadam">Oragadam</option>
+                            <option value="Cheyyar">Cheyyar</option>
+                            <option value="WFH">WFH</option>
+                            <option value="-">-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 2: SHIFT, HOURS, ISSUE COUNT, PLAN, ACTUAL DATE, REMARKS -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+                    <!-- 6. SHIFT -->
+                    <div>
+                        <label for="field-shift" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            SHIFT
+                        </label>
+                        <select id="field-shift"
+                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            <option value="SHIFT" selected>SHIFT</option>
+                            <option value="General">General</option>
+                            <option value="1st">1st</option>
+                            <option value="2nd">2nd</option>
+                            <option value="3rd">3rd</option>
+                            <option value="-">-</option>
+                        </select>
+                    </div>
+
+                    <!-- 7. HOURS -->
+                    <div>
+                        <label for="field-hours" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            HOURS
+                        </label>
+                        <select id="field-hours"
+                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            <option value="9hrs" selected>9hrs</option>
+                            <option value="-">-</option>
+                        </select>
+                    </div>
+
+                    <!-- 8. ISSUE COUNT -->
+                    <div>
+                        <label for="field-issue-count" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            ISSUE COUNT
+                        </label>
+                        <input type="text" id="field-issue-count" value="0"
+                            oninput="this.value = this.value.replace(/[^0-9.-]/g, '')"
+                            placeholder="0, 1, 2..."
+                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                    </div>
+
+                    <!-- 9. PLAN -->
+                    <div>
+                        <label for="field-plan" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            PLAN
+                        </label>
+                        <input type="text" id="field-plan" placeholder="Auto-matches DATE"
+                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                    </div>
+
+                    <!-- 10. ACTUAL DATE -->
+                    <div>
+                        <label for="field-actual-date" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            ACTUAL DATE
+                        </label>
+                        <input type="text" id="field-actual-date" placeholder="Auto-matches DATE"
+                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                    </div>
+
+                    <!-- 11. REMARKS -->
+                    <div>
+                        <label for="field-remarks" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            REMARKS
+                        </label>
+                        <select id="field-remarks"
+                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            <option value="COMPLETED" selected>COMPLETED</option>
+                            <option value="INPROGRESS">INPROGRESS</option>
+                            <option value="-">-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 3: ASSIGNMENT / ACTIVITIES & ISSUE STATUS / DETAILS -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+                    <!-- 12. ASSIGNMENT / ACTIVITIES -->
+                    <div class="lg:col-span-2">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="field-activities" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                ASSIGNMENT / ACTIVITIES <span class="text-rose-600">*</span>
+                            </label>
+                            <button type="button" onclick="appendNextBulletPoint()" 
+                                class="text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1 transition">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5"></i> + Add Numbered Line
+                            </button>
+                        </div>
+                        <textarea id="field-activities" rows="3" required
+                            placeholder="Enter daily tasks or support activities"
+                            class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"></textarea>
+                    </div>
+
+                    <!-- 13. ISSUE STATUS / DETAILS -->
+                    <div>
+                        <label for="field-issue-status" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            ISSUE STATUS / DETAILS
+                        </label>
+                        <textarea id="field-issue-status" rows="3"
+                            placeholder="Enter issue status"
+                            class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"></textarea>
+                        <div class="flex flex-wrap gap-1.5 mt-1.5">
+                            <button type="button" onclick="setIssueStatusQuick('PRODUCTION ISSUE NOT OCCUR')" class="text-[10px] font-mono font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 px-2 py-0.5 rounded">
+                                PRODUCTION ISSUE NOT OCCUR
+                            </button>
+                            <button type="button" onclick="setIssueStatusQuick('NO ISSUE')" class="text-[10px] font-mono font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 px-2 py-0.5 rounded">
+                                NO ISSUE
+                            </button>
+                            <button type="button" onclick="setIssueStatusQuick('PRODUCTION ISSUE')" class="text-[10px] font-mono font-semibold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 px-2 py-0.5 rounded">
+                                PRODUCTION ISSUE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Action Footer -->
+                <div class="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-4 text-xs text-slate-600 font-medium">
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                            <input type="checkbox" id="date-format-toggle" class="rounded text-blue-600 focus:ring-blue-600">
+                            <span>Format Dates as <code class="font-mono font-bold text-slate-800 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">D.M.YYYY</code></span>
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                            <input type="checkbox" id="auto-download-csv-toggle" class="rounded text-blue-600 focus:ring-blue-600">
+                            <span>Auto-download updated CSV on every save</span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center gap-2 ml-auto">
+                        <button type="button" id="cancel-edit-btn" onclick="cancelEditMode()" 
+                            class="hidden px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+                            Cancel Edit
+                        </button>
+                        <button type="submit" id="submit-btn" 
+                            class="inline-flex items-center gap-2 px-6 py-2.5 text-xs sm:text-sm font-bold text-white bg-blue-700 hover:bg-blue-800 rounded-xl shadow-sm transition">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                            <span id="submit-btn-text">Save Daily Data to Sheet</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Unified Data Grid & Filter Toolbar -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <!-- Filter Bar -->
+            <div class="p-4 border-b border-slate-200 flex flex-col xl:flex-row xl:items-center justify-between gap-3 bg-slate-50">
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">All Engineers Activities Sheet</h3>
+                    <span id="filtered-count-badge" class="text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded-full">0 of 0 rows</span>
+                    <button type="button" onclick="showAllDataNow()" 
+                        class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg shadow-xs transition">
+                        <i data-lucide="eye" class="w-3.5 h-3.5 text-blue-600"></i>
+                        <span>Show All Data</span>
+                    </button>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Keyword Search -->
+                    <div class="relative flex-1 sm:flex-initial min-w-[190px]">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                        <input type="text" id="filter-search" placeholder="Search name, activity, remarks..."
+                            class="w-full pl-9 pr-3 py-1.5 text-sm rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    </div>
+
+                    <!-- Date Filter -->
+                    <input type="date" id="filter-date" title="Filter by specific date"
+                        class="py-1.5 px-2.5 text-sm font-mono rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600">
+
+                   <!-- Engineer Filter -->
+<select id="filter-engineer" class="py-1.5 px-3 text-sm font-semibold rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600">
+    <option value="ALL">All Engineers Name</option>
+</select>
+
+                    <!-- Project Filter -->
+                    <select id="filter-project" class="py-1.5 px-3 text-sm font-medium rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        <option value="ALL">All Projects</option>
+                    </select>
+
+                    <!-- Location Filter -->
+                    <select id="filter-location" class="py-1.5 px-3 text-sm font-medium rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        <option value="ALL">All Locations</option>
+                        <option value="Vallam">Vallam</option>
+                        <option value="Oragadam">Oragadam</option>
+                        <option value="Cheyyar">Cheyyar</option>
+                        <option value="WFH">WFH</option>
+                        <option value="-">-</option>
+                    </select>
+
+                    <button id="clear-filters-btn" onclick="clearFilters()" title="Show all records"
+                        class="hidden inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i> Reset Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- Horizontal Scrollable Unified Table -->
+            <div class="overflow-x-auto custom-scrollbar w-full bg-white max-h-[680px]">
+                <table class="w-full text-left border-collapse min-w-[1480px]">
+                    <thead class="sticky top-0 z-20">
+                        <tr class="bg-slate-800 text-slate-100 border-b border-slate-700 text-[11px] font-mono font-bold uppercase tracking-wider">
+                            <th class="py-3 px-3 text-center w-10">#</th>
+                            <th class="py-3 px-3 whitespace-nowrap">ENGINEER NAME</th>
+                            <th class="py-3 px-3 whitespace-nowrap">DATE</th>
+                            <th class="py-3 px-3 whitespace-nowrap">DAYS</th>
+                            <th class="py-3 px-3 whitespace-nowrap">CUSTOMER</th>
+                            <th class="py-3 px-3 whitespace-nowrap">PROJECT</th>
+                            <th class="py-3 px-3 min-w-[290px]">ASSIGNMENT / ACTIVITIES</th>
+                            <th class="py-3 px-3 min-w-[170px]">ISSUE STATUS / DETAILS</th>
+                            <th class="py-3 px-3 text-center whitespace-nowrap">ISSUE COUNT</th>
+                            <th class="py-3 px-3 whitespace-nowrap">LOCATION</th>
+                            <th class="py-3 px-3 whitespace-nowrap">SHIFT</th>
+                            <th class="py-3 px-3 whitespace-nowrap">HOURS</th>
+                            <th class="py-3 px-3 whitespace-nowrap">PLAN</th>
+                            <th class="py-3 px-3 whitespace-nowrap">ACTUAL DATE</th>
+                            <th class="py-3 px-3 whitespace-nowrap">REMARKS</th>
+                            <th class="py-3 px-3 text-right whitespace-nowrap sticky right-0 bg-slate-800 border-l border-slate-700">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-200 text-xs sm:text-sm">
+                        <!-- Rows populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State (Shown on Fresh Start) -->
+            <div id="empty-state" class="py-16 px-4 text-center bg-slate-50/50">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 border border-blue-100 flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
+                </div>
+                <h4 class="text-sm font-bold text-slate-900">No activity records yet</h4>
+                <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                    Select your <strong>Engineer Name</strong>, <strong>Project</strong>, and <strong>Location</strong> above, enter your daily activities, and click <strong>Save Daily Data to Sheet</strong>.
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 py-3.5 px-4 sm:px-6 mt-auto">
+        <div class="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-medium">
+            <p>Daily Support Activities &bull; Single Unified CSV Sheet &amp; Auto-Save Backend</p>
+            <p class="font-mono text-slate-300" id="footer-stats-summary">13 Engineers Configured &bull; Fresh Master Sheet</p>
+        </div>
+    </footer>
+
+    <script>
+        /**
+         * ============================================================================
+         * UNIFIED MASTER SHEET CONFIGURATION & INDEXEDDB + LOCALSTORAGE BACKEND
+         * ============================================================================
+         */
+        const STORAGE_KEY = 'daily_support_unified_fresh_v1';
+        const DB_NAME = 'DailySupportFreshDB';
+        const DB_STORE = 'masterSheetStore';
+
+        // 1st option starts with "Enter your name"
+        const PLACEHOLDER_ENGINEER = 'Enter your name';
+
+        const DEFAULT_ENGINEERS = [
+            PLACEHOLDER_ENGINEER,
+            'YUVARAJ J',
+            'LOKESH',
+            'LAKSHMANAN R',
+            'RAGUL R',
+            'Duraiyarasan V',
+            'PRAVEEN K',
+            'VIGNESH D',
+            'PIRIDEEPRAJ K',
+            'Jay Akash P.I',
+            'BALAJI G',
+            'AKASH',
+            'Sivakumar S',
+            'Santhoshkumar V'
+        ];
+
+        // Fresh empty dataset on start
+        const INITIAL_RECORDS = [];
+
+        const UPPERCASE_DAYS = [
+            'SUNDAY',
+            'MONDAY',
+            'TUESDAY',
+            'WEDNESDAY',
+            'THURSDAY',
+            'FRIDAY',
+            'SATURDAY'
+        ];
+
+        const CSV_EXPORT_HEADERS = [
+            'ENGINEER NAME',
+            'DATE',
+            'DAYS',
+            'CUSTOMER',
+            'PROJECT',
+            'ASSIGNMENT / ACTIVITIES',
+            'ISSUE STATUS / DETAILS',
+            'ISSUE COUNT',
+            'LOCATION',
+            'SHIFT',
+            'HOURS',
+            'PLAN',
+            'ACTUAL DATE',
+            'REMARKS'
+        ];
+
+        let masterState = {
+            useDotDateFormat: true,
+            autoDownloadCSV: false,
+            engineers: [...DEFAULT_ENGINEERS],
+            rows: []
+        };
+
+        /**
+         * ============================================================================
+         * INDEXEDDB + LOCALSTORAGE DUAL PERSISTENCE BACKEND
+         * ============================================================================
+         */
+        function openBackendDB() {
+            return new Promise((resolve) => {
+                if (!window.indexedDB) {
+                    resolve(null);
+                    return;
+                }
+                const req = indexedDB.open(DB_NAME, 1);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(DB_STORE)) {
+                        db.createObjectStore(DB_STORE);
+                    }
+                };
+                req.onsuccess = (e) => resolve(e.target.result);
+                req.onerror = () => resolve(null);
+            });
+        }
+
+        async function saveToIndexedDB(stateObj) {
+            try {
+                const db = await openBackendDB();
+                if (!db) return;
+                const tx = db.transaction(DB_STORE, 'readwrite');
+                tx.objectStore(DB_STORE).put(stateObj, 'unifiedState');
+            } catch (err) {
+                console.warn('IndexedDB save warning:', err);
+            }
+        }
+
+        async function loadFromIndexedDB() {
+            try {
+                const db = await openBackendDB();
+                if (!db) return null;
+                return new Promise((resolve) => {
+                    const tx = db.transaction(DB_STORE, 'readonly');
+                    const req = tx.objectStore(DB_STORE).get('unifiedState');
+                    req.onsuccess = () => resolve(req.result || null);
+                    req.onerror = () => resolve(null);
+                });
+            } catch (err) {
+                return null;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadFromStorage();
+            populateEngineerDropdowns();
+            resetFormToFreshDefaults();
+            renderMasterTable();
+            attachEventListeners();
+            lucide.createIcons();
+        });
+
+        async function loadFromStorage() {
+            let loaded = await loadFromIndexedDB();
+
+            if (!loaded) {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (raw) {
+                        loaded = JSON.parse(raw);
+                    }
+                } catch (err) {
+                    console.error('Error loading LocalStorage:', err);
+                }
+            }
+
+            if (loaded && Array.isArray(loaded.rows)) {
+                masterState = loaded;
+                const withoutPlaceholder = (masterState.engineers || DEFAULT_ENGINEERS).filter(
+                    e => e.toLowerCase() !== PLACEHOLDER_ENGINEER.toLowerCase()
+                );
+                masterState.engineers = [PLACEHOLDER_ENGINEER, ...withoutPlaceholder];
+                document.getElementById('date-format-toggle').checked = !!masterState.useDotDateFormat;
+                document.getElementById('auto-download-csv-toggle').checked = !!masterState.autoDownloadCSV;
+                updateFooterSummary();
+                return;
+            }
+
+            // First launch: start completely fresh with 0 rows
+            initializeFreshMasterSheet();
+        }
+
+        function initializeFreshMasterSheet() {
+            masterState.engineers = [...DEFAULT_ENGINEERS];
+            masterState.useDotDateFormat = true;
+            masterState.autoDownloadCSV = false;
+            document.getElementById('date-format-toggle').checked = true;
+            document.getElementById('auto-download-csv-toggle').checked = false;
+            masterState.rows = [...INITIAL_RECORDS];
+            saveToStorage();
+        }
+
+        async function saveToStorage(triggerAutoCSV = false) {
+            await saveToIndexedDB(masterState);
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(masterState));
+            } catch (err) {
+                console.warn('LocalStorage quota notice:', err);
+            }
+
+            updateFooterSummary();
+
+            if (triggerAutoCSV && masterState.autoDownloadCSV) {
+                exportAllDataToCSV(true);
+            }
+        }
+
+        function updateFooterSummary() {
+            const actualEngineerCount = masterState.engineers.filter(e => e !== PLACEHOLDER_ENGINEER).length;
+            const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('footer-stats-summary').textContent =
+                `${actualEngineerCount} Engineers • ${masterState.rows.length} Total Rows in One CSV Sheet • Updated at ${nowTime}`;
+        }
+
+        function populateEngineerDropdowns() {
+            const formSelect = document.getElementById('field-engineer');
+            const filterSelect = document.getElementById('filter-engineer');
+
+            const currentFilterVal = filterSelect.value || 'ALL';
+
+            // Form dropdown always starts with "Enter your name" as 1st option
+            const formOptionsHTML = masterState.engineers
+                .map((eng, i) => `<option value="${i === 0 ? '' : escapeAttr(eng)}" ${i === 0 ? 'selected' : ''}>${escapeHTML(eng)}</option>`)
+                .join('');
+
+            const validEngineers = masterState.engineers.filter(e => e !== PLACEHOLDER_ENGINEER);
+            const validOptionsHTML = validEngineers
+                .map(eng => `<option value="${escapeAttr(eng)}">${escapeHTML(eng)}</option>`)
+                .join('');
+
+            formSelect.innerHTML = formOptionsHTML;
+            filterSelect.innerHTML = `<option value="ALL">All Engineers Name</option>` + validOptionsHTML;
+            // Force 1st option on start/refresh
+            formSelect.selectedIndex = 0;
+
+            if (currentFilterVal === 'ALL' || validEngineers.includes(currentFilterVal)) {
+                filterSelect.value = currentFilterVal;
+            }
+        }
+
+        /**
+         * ============================================================================
+         * DATE & DAY FORMATTING HELPERS
+         * ============================================================================
+         */
+        function getTodayISO() {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function getUppercaseDayFromISO(isoDate) {
+            if (!isoDate) return '';
+            const parts = isoDate.split('-');
+            if (parts.length !== 3) return '';
+            const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+            if (isNaN(d.getTime())) return '';
+            return UPPERCASE_DAYS[d.getDay()];
+        }
+
+        function formatDisplayDate(isoDate) {
+            if (!isoDate || isoDate === '-') return isoDate || '-';
+            if (!masterState.useDotDateFormat) return isoDate;
+            const parts = isoDate.split('-');
+            if (parts.length !== 3) return isoDate;
+            const day = parseInt(parts[2], 10);
+            const month = parseInt(parts[1], 10);
+            const year = parts[0];
+            return `${day}.${month}.${year}`;
+        }
+
+        function parseFlexibleDateToISO(rawDateStr) {
+            if (!rawDateStr) return getTodayISO();
+            const cleaned = rawDateStr.trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) return cleaned;
+            const match = cleaned.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+            if (match) {
+                const dd = match[1].padStart(2, '0');
+                const mm = match[2].padStart(2, '0');
+                const yyyy = match[3];
+                return `${yyyy}-${mm}-${dd}`;
+            }
+            return cleaned;
+        }
+
+        /**
+         * Ensures on Start & Refresh:
+         * - Engineer = "Enter your name" (1st option)
+         * - Project  = "PROJECT" (1st option)
+         * - Location = "LOCATION" (1st option)
+         * - Shift    = "SHIFT" (1st option)
+         */
+        function resetFormToFreshDefaults() {
+            const today = getTodayISO();
+            document.getElementById('field-engineer').selectedIndex = 0;
+            document.getElementById('field-date').value = today;
+
+            const dayName = getUppercaseDayFromISO(today);
+            document.getElementById('field-days').value = dayName;
+
+            const formatted = formatDisplayDate(today);
+            document.getElementById('field-customer').value = 'Royal Enfield';
+            document.getElementById('field-project').value = 'PROJECT';
+            document.getElementById('field-location').value = 'LOCATION';
+            document.getElementById('field-shift').value = 'SHIFT';
+            document.getElementById('field-hours').value = '9hrs';
+            document.getElementById('field-issue-count').value = '0';
+            document.getElementById('field-plan').value = formatted;
+            document.getElementById('field-actual-date').value = formatted;
+            document.getElementById('field-remarks').value = 'COMPLETED';
+            document.getElementById('field-activities').value = '';
+            document.getElementById('field-issue-status').value = '';
+        }
+
+        /**
+         * ============================================================================
+         * SMART PRESETS
+         * ============================================================================
+         */
+        function applyStatusPreset(presetType, notify = true) {
+            const dateISO = document.getElementById('field-date').value || getTodayISO();
+            const formattedDate = formatDisplayDate(dateISO);
+
+            if (presetType === 'WORKING') {
+                document.getElementById('field-customer').value = 'Royal Enfield';
+                if (document.getElementById('field-project').value === '-') {
+                    document.getElementById('field-project').value = 'PROJECT';
+                }
+                if (document.getElementById('field-location').value === '-') {
+                    document.getElementById('field-location').value = 'LOCATION';
+                }
+                if (document.getElementById('field-shift').value === '-') {
+                    document.getElementById('field-shift').value = 'SHIFT';
+                }
+                document.getElementById('field-hours').value = '9hrs';
+                document.getElementById('field-issue-count').value = '0';
+                document.getElementById('field-plan').value = formattedDate;
+                document.getElementById('field-actual-date').value = formattedDate;
+                document.getElementById('field-remarks').value = 'COMPLETED';
+                if (['SUNDAY', 'HOLIDAY', 'LEAVE', 'WEEK OFF'].includes(document.getElementById('field-activities').value.trim())) {
+                    document.getElementById('field-activities').value = '';
+                }
+                if (notify) showToast('Applied Working Day defaults', 'success');
+            } else {
+                document.getElementById('field-customer').value = '-';
+                document.getElementById('field-project').value = '-';
+                document.getElementById('field-activities').value = presetType;
+                document.getElementById('field-issue-status').value = '-';
+                document.getElementById('field-issue-count').value = '-';
+                document.getElementById('field-location').value = '-';
+                document.getElementById('field-shift').value = '-';
+                document.getElementById('field-hours').value = '-';
+                document.getElementById('field-plan').value = '-';
+                document.getElementById('field-actual-date').value = '-';
+                document.getElementById('field-remarks').value = '-';
+                if (notify) showToast(`Applied "${presetType}" preset`, 'info');
+            }
+        }
+
+        function appendNextBulletPoint() {
+            const textarea = document.getElementById('field-activities');
+            const currentVal = textarea.value.trim();
+            if (!currentVal) {
+                textarea.value = '1. ';
+            } else {
+                const lines = currentVal.split('\n');
+                let maxNum = 0;
+                lines.forEach(line => {
+                    const m = line.trim().match(/^(\d+)\./);
+                    if (m) {
+                        const num = parseInt(m[1], 10);
+                        if (num > maxNum) maxNum = num;
+                    }
+                });
+                const nextNum = maxNum > 0 ? maxNum + 1 : lines.length + 1;
+                textarea.value = `${currentVal}\n${nextNum}. `;
+            }
+            textarea.focus();
+        }
+
+        function setIssueStatusQuick(text) {
+            document.getElementById('field-issue-status').value = text;
+            if (text === 'PRODUCTION ISSUE' && document.getElementById('field-issue-count').value === '0') {
+                document.getElementById('field-issue-count').value = '1';
+            } else if (text !== 'PRODUCTION ISSUE') {
+                document.getElementById('field-issue-count').value = '0';
+            }
+        }
+
+        function openAddEngineerModal() {
+            document.getElementById('new-engineer-name').value = '';
+            showModal('add-engineer-modal');
+        }
+
+        /**
+         * ============================================================================
+         * CRUD OPERATIONS (UNIFIED MASTER SHEET)
+         * ============================================================================
+         */
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-row-id').value;
+            const engineerVal = document.getElementById('field-engineer').value.trim();
+
+            if (!engineerVal || engineerVal.toLowerCase() === PLACEHOLDER_ENGINEER.toLowerCase()) {
+                showToast('Please select your Engineer Name first!', 'error');
+                document.getElementById('field-engineer').focus();
+                return;
+            }
+
+            const projectVal = document.getElementById('field-project').value;
+            const locationVal = document.getElementById('field-location').value;
+
+            if (projectVal === 'PROJECT') {
+                showToast('Please select a Project from the dropdown!', 'error');
+                document.getElementById('field-project').focus();
+                return;
+            }
+
+            if (locationVal === 'LOCATION') {
+                showToast('Please select a Location from the dropdown!', 'error');
+                document.getElementById('field-location').focus();
+                return;
+            }
+
+            const dateISO = document.getElementById('field-date').value;
+            const daysVal = (document.getElementById('field-days').value || getUppercaseDayFromISO(dateISO)).toUpperCase().trim();
+            const customerVal = document.getElementById('field-customer').value.trim() || 'Royal Enfield';
+            const activitiesVal = document.getElementById('field-activities').value.trim();
+            const issueStatusVal = document.getElementById('field-issue-status').value.trim() || 'NO ISSUE';
+            const issueCountVal = document.getElementById('field-issue-count').value.trim() || '0';
+            const shiftVal = document.getElementById('field-shift').value === 'SHIFT' ? 'General' : document.getElementById('field-shift').value;
+            const hoursVal = document.getElementById('field-hours').value.trim() || '9hrs';
+            const planVal = document.getElementById('field-plan').value.trim() || formatDisplayDate(dateISO);
+            const actualDateVal = document.getElementById('field-actual-date').value.trim() || formatDisplayDate(dateISO);
+            const remarksVal = document.getElementById('field-remarks').value.trim() || 'COMPLETED';
+
+            if (!dateISO || !activitiesVal) {
+                showToast('DATE and ASSIGNMENT / ACTIVITIES are required.', 'error');
+                return;
+            }
+
+            const rowObj = {
+                id: editId || generateId(),
+                engineer: engineerVal,
+                dateISO,
+                days: daysVal,
+                customer: customerVal,
+                project: projectVal,
+                activities: activitiesVal,
+                issueStatus: issueStatusVal,
+                issueCount: issueCountVal,
+                location: locationVal,
+                shift: shiftVal,
+                hours: hoursVal,
+                plan: planVal,
+                actualDate: actualDateVal,
+                remarks: remarksVal
+            };
+
+            if (editId) {
+                const index = masterState.rows.findIndex(r => r.id === editId);
+                if (index !== -1) {
+                    masterState.rows[index] = rowObj;
+                    showToast(`Updated entry for ${engineerVal} in Master Sheet!`, 'success');
+                }
+                cancelEditMode();
+            } else {
+                masterState.rows.unshift(rowObj);
+                showToast(`Saved ${engineerVal}'s daily data to Unified CSV Sheet!`, 'success');
+                document.getElementById('field-activities').value = '';
+            }
+
+            await saveToStorage(true);
+            renderMasterTable();
+        }
+
+        function startEditRow(id) {
+            const row = masterState.rows.find(r => r.id === id);
+            if (!row) return;
+
+            if (!masterState.engineers.includes(row.engineer)) {
+                masterState.engineers.push(row.engineer);
+                populateEngineerDropdowns();
+            }
+
+            document.getElementById('edit-row-id').value = row.id;
+            document.getElementById('field-engineer').value = row.engineer;
+            document.getElementById('field-date').value = row.dateISO;
+            document.getElementById('field-days').value = row.days;
+            document.getElementById('field-customer').value = row.customer;
+
+            const projSelect = document.getElementById('field-project');
+            if (![...projSelect.options].some(o => o.value === row.project)) {
+                projSelect.add(new Option(row.project, row.project));
+            }
+            projSelect.value = row.project;
+
+            document.getElementById('field-activities').value = row.activities;
+            document.getElementById('field-issue-status').value = row.issueStatus;
+            document.getElementById('field-issue-count').value = row.issueCount;
+
+            const locSelect = document.getElementById('field-location');
+            if (![...locSelect.options].some(o => o.value === row.location)) {
+                locSelect.add(new Option(row.location, row.location));
+            }
+            locSelect.value = row.location;
+
+            document.getElementById('field-shift').value = row.shift;
+            document.getElementById('field-hours').value = row.hours;
+            document.getElementById('field-plan').value = row.plan;
+            document.getElementById('field-actual-date').value = row.actualDate;
+
+            const remSelect = document.getElementById('field-remarks');
+            if (![...remSelect.options].some(o => o.value === row.remarks)) {
+                remSelect.add(new Option(row.remarks, row.remarks));
+            }
+            remSelect.value = row.remarks;
+
+            const badge = document.getElementById('form-mode-badge');
+            badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-amber-600 text-white shadow-sm';
+            badge.innerHTML = `<i data-lucide="pencil" class="w-3.5 h-3.5"></i> Editing: ${escapeHTML(row.engineer)} (${formatDisplayDate(row.dateISO)})`;
+
+            document.getElementById('submit-btn-text').textContent = 'Update Row';
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+
+            document.getElementById('activity-entry-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            lucide.createIcons();
+        }
+
+        function cancelEditMode() {
+            document.getElementById('edit-row-id').value = '';
+            resetFormToFreshDefaults();
+
+            const badge = document.getElementById('form-mode-badge');
+            badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-blue-700 text-white shadow-sm';
+            badge.innerHTML = `<i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Log Daily Activity`;
+
+            document.getElementById('submit-btn-text').textContent = 'Save Daily Data to Sheet';
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        async function deleteRow(id) {
+            masterState.rows = masterState.rows.filter(r => r.id !== id);
+            if (document.getElementById('edit-row-id').value === id) {
+                cancelEditMode();
+            }
+            await saveToStorage(false);
+            renderMasterTable();
+            showToast('Row deleted from Master Sheet.', 'info');
+        }
+
+        /**
+         * ============================================================================
+         * RENDER UNIFIED DATA TABLE
+         * ============================================================================
+         */
+        function showAllDataNow() {
+            clearFilters();
+            const tableSection = document.getElementById('table-body');
+            if (tableSection) {
+                tableSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            showToast(`Showing all ${masterState.rows.length} rows in Master Sheet!`, 'success');
+        }
+
+        function renderMasterTable() {
+            const rows = masterState.rows || [];
+
+            // Update KPI Metrics
+            const workingDays = rows.filter(r => r.customer && r.customer !== '-').length;
+            const offDays = rows.length - workingDays;
+            const uniqueActiveEng = new Set(rows.map(r => r.engineer)).size;
+            const totalIssues = rows.reduce((acc, r) => {
+                const parsed = parseInt(r.issueCount, 10);
+                return acc + (isNaN(parsed) ? 0 : parsed);
+            }, 0);
+
+            document.getElementById('stat-total-rows').textContent = rows.length;
+            document.getElementById('stat-engineer-count').textContent = uniqueActiveEng;
+            document.getElementById('stat-working-days').textContent = workingDays;
+            document.getElementById('stat-issue-count').textContent = totalIssues;
+            document.getElementById('stat-off-days').textContent = offDays;
+
+            // Populate Project Filter Dropdown dynamically
+            const projectSelect = document.getElementById('filter-project');
+            const currentProjFilter = projectSelect.value;
+            const uniqueProjects = [...new Set(rows.map(r => r.project).filter(p => p && p !== '-' && p !== 'PROJECT'))].sort();
+            projectSelect.innerHTML = `<option value="ALL">All Projects</option>` +
+                uniqueProjects.map(p => `<option value="${escapeAttr(p)}">${escapeHTML(p)}</option>`).join('');
+            if (uniqueProjects.includes(currentProjFilter)) {
+                projectSelect.value = currentProjFilter;
+            }
+
+            // Apply Filters
+            const searchQ = document.getElementById('filter-search').value.toLowerCase().trim();
+            const dateFilter = document.getElementById('filter-date').value;
+            const engFilter = document.getElementById('filter-engineer').value;
+            const projFilter = projectSelect.value;
+            const locFilter = document.getElementById('filter-location').value;
+
+            const hasFilter = searchQ !== '' || dateFilter !== '' || engFilter !== 'ALL' || projFilter !== 'ALL' || locFilter !== 'ALL';
+            document.getElementById('clear-filters-btn').classList.toggle('hidden', !hasFilter);
+
+            const filtered = rows.filter(r => {
+                if (dateFilter && r.dateISO !== dateFilter) return false;
+                if (engFilter !== 'ALL' && r.engineer !== engFilter) return false;
+                if (projFilter !== 'ALL' && r.project !== projFilter) return false;
+                if (locFilter !== 'ALL' && r.location.toLowerCase() !== locFilter.toLowerCase()) return false;
+                if (searchQ) {
+                    const blob = [
+                        r.engineer, formatDisplayDate(r.dateISO), r.days, r.customer, r.project,
+                        r.activities, r.issueStatus, r.location, r.shift, r.remarks
+                    ].join(' ').toLowerCase();
+                    if (!blob.includes(searchQ)) return false;
+                }
+                return true;
+            });
+
+            document.getElementById('filtered-count-badge').textContent = `${filtered.length} of ${rows.length} rows`;
+
+            const tbody = document.getElementById('table-body');
+            const emptyState = document.getElementById('empty-state');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            tbody.innerHTML = filtered.map((row, idx) => {
+                const isOffDay = ['SUNDAY', 'WEEKEND HOLIDAY', 'DEEPAVALI HOLIDAYS', 'HOLIDAY', 'LEAVE', 'WEEK OFF'].includes((row.activities || '').trim().toUpperCase()) || row.customer === '-';
+                const rowBg = isOffDay ? 'bg-slate-100/80 hover:bg-slate-200/60' : 'bg-white hover:bg-blue-50/40';
+                const dayBadge = row.days === 'SUNDAY'
+                    ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                    : 'bg-slate-100 text-slate-700 border border-slate-200';
+
+                const issueNum = parseInt(row.issueCount, 10);
+                const issueBadge = !isNaN(issueNum) && issueNum > 0
+                    ? 'bg-rose-600 text-white font-bold'
+                    : 'bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold';
+
+                return `
+                    <tr class="${rowBg} transition">
+                        <td class="py-2.5 px-3 text-center font-mono text-xs font-semibold text-slate-500">${idx + 1}</td>
+                        <td class="py-2.5 px-3 whitespace-nowrap">
+                            <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-900 border border-slate-200">
+                                ${escapeHTML(row.engineer)}
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-3 font-mono text-xs font-semibold text-slate-800 whitespace-nowrap">${escapeHTML(formatDisplayDate(row.dateISO))}</td>
+                        <td class="py-2.5 px-3 whitespace-nowrap">
+                            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-mono font-bold ${dayBadge}">
+                                ${escapeHTML(row.days)}
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-3 text-xs font-medium text-slate-700 whitespace-nowrap">${escapeHTML(row.customer || '-')}</td>
+                        <td class="py-2.5 px-3 whitespace-nowrap">
+                            ${row.project && row.project !== '-' 
+                                ? `<span class="inline-block px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">${escapeHTML(row.project)}</span>`
+                                : `<span class="text-slate-400 font-mono text-xs">-</span>`
+                            }
+                        </td>
+                        <td class="py-2.5 px-3 text-xs font-medium text-slate-800 whitespace-pre-line leading-relaxed max-w-md">${escapeHTML(row.activities)}</td>
+                        <td class="py-2.5 px-3 text-xs font-medium text-slate-700 whitespace-pre-line max-w-[200px]">${escapeHTML(row.issueStatus || '-')}</td>
+                        <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                            <span class="inline-block px-2.5 py-0.5 rounded-full font-mono text-xs ${issueBadge}">
+                                ${escapeHTML(row.issueCount || '0')}
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-3 text-xs font-semibold text-slate-700 whitespace-nowrap">${escapeHTML(row.location || '-')}</td>
+                        <td class="py-2.5 px-3 whitespace-nowrap">
+                            <span class="inline-block px-2 py-0.5 rounded font-mono text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                ${escapeHTML(row.shift || '-')}
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-3 font-mono text-xs font-medium text-slate-700 whitespace-nowrap">${escapeHTML(row.hours || '-')}</td>
+                        <td class="py-2.5 px-3 font-mono text-xs text-slate-600 whitespace-nowrap">${escapeHTML(row.plan || '-')}</td>
+                        <td class="py-2.5 px-3 font-mono text-xs text-slate-600 whitespace-nowrap">${escapeHTML(row.actualDate || '-')}</td>
+                        <td class="py-2.5 px-3 text-xs font-semibold text-slate-800 whitespace-nowrap">${escapeHTML(row.remarks || '-')}</td>
+                        <td class="py-2.5 px-3 text-right whitespace-nowrap sticky right-0 bg-slate-50 border-l border-slate-200">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick="startEditRow('${row.id}')" title="Edit row"
+                                    class="p-1.5 text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition">
+                                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button onclick="deleteRow('${row.id}')" title="Delete row"
+                                    class="p-1.5 text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs transition">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-search').value = '';
+            document.getElementById('filter-date').value = '';
+            document.getElementById('filter-engineer').value = 'ALL';
+            document.getElementById('filter-project').value = 'ALL';
+            document.getElementById('filter-location').value = 'ALL';
+            renderMasterTable();
+        }
+
+        /**
+         * ============================================================================
+         * SINGLE UNIFIED CSV EXPORT & IMPORT
+         * ============================================================================
+         */
+        function buildUnifiedCSVString() {
+            const rows = masterState.rows || [];
+            const escapeCSV = (val) => {
+                const str = val === undefined || val === null ? '' : String(val);
+                if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+
+            const lines = [CSV_EXPORT_HEADERS.map(escapeCSV).join(',')];
+
+            rows.forEach(r => {
+                const recordCells = [
+                    r.engineer,
+                    formatDisplayDate(r.dateISO),
+                    r.days,
+                    r.customer,
+                    r.project,
+                    r.activities,
+                    r.issueStatus,
+                    r.issueCount,
+                    r.location,
+                    r.shift,
+                    r.hours,
+                    r.plan,
+                    r.actualDate,
+                    r.remarks
+                ];
+                lines.push(recordCells.map(escapeCSV).join(','));
+            });
+
+            return lines.join('\r\n');
+        }
+
+        function exportAllDataToCSV(isSilent = false) {
+            const rows = masterState.rows || [];
+
+            if (rows.length === 0) {
+                if (!isSilent) showToast('Master Sheet is empty. Add rows before exporting.', 'error');
+                return;
+            }
+
+            const csvText = buildUnifiedCSVString();
+            const csvBlob = new Blob(['\uFEFF' + csvText], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(csvBlob);
+            const fileName = `Daily_Support_Activities_ALL_DATA_${getTodayISO()}.csv`;
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            if (!isSilent) {
+                showToast(`Downloaded "${fileName}" (${rows.length} rows in 1 sheet)!`, 'success');
+            }
+        }
+
+        function handleCSVFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const matrix = parseCSVMatrix(e.target.result);
+                    if (matrix.length < 2) {
+                        showToast('CSV file has no data rows.', 'error');
+                        return;
+                    }
+
+                    const headers = matrix[0].map(h => h.trim().toUpperCase());
+                    const findCol = (keywords) => headers.findIndex(h => keywords.some(k => h.includes(k)));
+
+                    const idxEng = findCol(['ENGINEER', 'NAME']);
+                    const idxDate = findCol(['DATE']);
+                    const idxDays = findCol(['DAY']);
+                    const idxCustomer = findCol(['CUSTOMER']);
+                    const idxProject = findCol(['PROJECT']);
+                    const idxActivities = findCol(['ASSIGNMENT', 'ACTIVIT']);
+                    const idxIssueStatus = findCol(['ISSUE STATUS', 'DETAILS']);
+                    const idxIssueCount = findCol(['ISSUE COUNT', 'COUNT']);
+                    const idxLocation = findCol(['LOCATION']);
+                    const idxShift = findCol(['SHIFT']);
+                    const idxHours = findCol(['HOURS', 'HRS']);
+                    const idxPlan = findCol(['PLAN']);
+                    const idxActualDate = findCol(['ACTUAL']);
+                    const idxRemarks = findCol(['REMARK']);
+
+                    const selectedEng = document.getElementById('field-engineer').value;
+                    const fallbackEngineer = (selectedEng && selectedEng !== PLACEHOLDER_ENGINEER) ? selectedEng : 'YUVARAJ J';
+                    const imported = [];
+
+                    for (let i = 1; i < matrix.length; i++) {
+                        const cells = matrix[i];
+                        if (cells.every(c => c.trim() === '')) continue;
+
+                        const engName = (idxEng !== -1 && cells[idxEng].trim())
+                            ? cells[idxEng].trim()
+                            : fallbackEngineer;
+
+                        if (!masterState.engineers.includes(engName)) {
+                            masterState.engineers.push(engName);
+                        }
+
+                        const rawDate = idxDate !== -1 ? cells[idxDate] : '';
+                        const dateISO = parseFlexibleDateToISO(rawDate);
+                        const days = (idxDays !== -1 && cells[idxDays].trim())
+                            ? cells[idxDays].trim().toUpperCase()
+                            : getUppercaseDayFromISO(dateISO);
+
+                        imported.push({
+                            id: generateId(),
+                            engineer: engName,
+                            dateISO,
+                            days,
+                            customer: idxCustomer !== -1 ? cells[idxCustomer].trim() : 'Royal Enfield',
+                            project: idxProject !== -1 ? cells[idxProject].trim() : 'VIN APPLICATION',
+                            activities: idxActivities !== -1 ? cells[idxActivities].trim() : '',
+                            issueStatus: idxIssueStatus !== -1 ? cells[idxIssueStatus].trim() : 'NO ISSUE',
+                            issueCount: idxIssueCount !== -1 ? cells[idxIssueCount].trim() : '0',
+                            location: idxLocation !== -1 ? cells[idxLocation].trim() : 'Vallam',
+                            shift: idxShift !== -1 ? cells[idxShift].trim() : 'General',
+                            hours: idxHours !== -1 ? cells[idxHours].trim() : '9hrs',
+                            plan: idxPlan !== -1 ? cells[idxPlan].trim() : formatDisplayDate(dateISO),
+                            actualDate: idxActualDate !== -1 ? cells[idxActualDate].trim() : formatDisplayDate(dateISO),
+                            remarks: idxRemarks !== -1 ? cells[idxRemarks].trim() : 'COMPLETED'
+                        });
+                    }
+
+                    masterState.rows = [...imported, ...masterState.rows];
+                    populateEngineerDropdowns();
+                    await saveToStorage(false);
+                    renderMasterTable();
+                    showToast(`Imported ${imported.length} rows into Unified CSV Sheet!`, 'success');
+                } catch (err) {
+                    console.error(err);
+                    showToast('Failed to parse CSV file.', 'error');
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSVMatrix(str) {
+            const rows = [];
+            let row = [];
+            let cur = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < str.length; i++) {
+                const ch = str[i];
+                const next = str[i + 1];
+                if (inQuotes) {
+                    if (ch === '"' && next === '"') {
+                        cur += '"';
+                        i++;
+                    } else if (ch === '"') {
+                        inQuotes = false;
+                    } else {
+                        cur += ch;
+                    }
+                } else {
+                    if (ch === '"') {
+                        inQuotes = true;
+                    } else if (ch === ',') {
+                        row.push(cur);
+                        cur = '';
+                    } else if (ch === '\r' && next === '\n') {
+                        row.push(cur);
+                        rows.push(row);
+                        row = [];
+                        cur = '';
+                        i++;
+                    } else if (ch === '\n' || ch === '\r') {
+                        row.push(cur);
+                        rows.push(row);
+                        row = [];
+                        cur = '';
+                    } else {
+                        cur += ch;
+                    }
+                }
+            }
+            if (cur !== '' || row.length > 0) {
+                row.push(cur);
+                rows.push(row);
+            }
+            return rows;
+        }
+
+        /**
+         * ============================================================================
+         * MODALS, PROMPTS & EVENT LISTENERS
+         * ============================================================================
+         */
+        function clearAllDataPrompt() {
+            openConfirmModal(
+                'Clear Entire Master Sheet?',
+                'This will remove all rows for all engineers. Download CSV first if you want a backup.',
+                async () => {
+                    masterState.rows = [];
+                    await saveToStorage(false);
+                    cancelEditMode();
+                    renderMasterTable();
+                    showToast('Cleared all rows from Master Sheet.', 'info');
+                }
+            );
+        }
+
+        function showModal(modalId) {
+            const backdrop = document.getElementById('modal-backdrop');
+            ['add-engineer-modal', 'confirm-modal'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            backdrop.classList.remove('hidden');
+            backdrop.classList.add('flex');
+            document.getElementById(modalId).classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeModals() {
+            const backdrop = document.getElementById('modal-backdrop');
+            backdrop.classList.add('hidden');
+            backdrop.classList.remove('flex');
+        }
+
+        function openConfirmModal(title, message, onConfirm) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            const btn = document.getElementById('confirm-action-btn');
+            const freshBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(freshBtn, btn);
+            freshBtn.addEventListener('click', () => {
+                closeModals();
+                onConfirm();
+            });
+            showModal('confirm-modal');
+        }
+
+        function attachEventListeners() {
+            document.getElementById('field-date').addEventListener('change', (e) => {
+                const iso = e.target.value;
+                const dayUpper = getUppercaseDayFromISO(iso);
+                document.getElementById('field-days').value = dayUpper;
+                const formatted = formatDisplayDate(iso);
+                document.getElementById('field-plan').value = formatted;
+                document.getElementById('field-actual-date').value = formatted;
+
+                if (dayUpper === 'SUNDAY') {
+                    applyStatusPreset('SUNDAY', false);
+                } else if (document.getElementById('field-customer').value === '-') {
+                    applyStatusPreset('WORKING', false);
+                }
+            });
+
+            document.getElementById('date-format-toggle').addEventListener('change', async (e) => {
+                masterState.useDotDateFormat = e.target.checked;
+                const currentISO = document.getElementById('field-date').value;
+                if (document.getElementById('field-actual-date').value !== '-') {
+                    const formatted = formatDisplayDate(currentISO);
+                    document.getElementById('field-plan').value = formatted;
+                    document.getElementById('field-actual-date').value = formatted;
+                }
+                await saveToStorage(false);
+                renderMasterTable();
+            });
+
+            document.getElementById('auto-download-csv-toggle').addEventListener('change', async (e) => {
+                masterState.autoDownloadCSV = e.target.checked;
+                await saveToStorage(false);
+                showToast(e.target.checked ? 'Auto-CSV download enabled on save' : 'Auto-CSV download disabled', 'info');
+            });
+
+            document.getElementById('activity-entry-form').addEventListener('submit', handleFormSubmit);
+
+            document.getElementById('add-engineer-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const nameInput = document.getElementById('new-engineer-name');
+                const name = nameInput.value.trim();
+                if (!name) return;
+
+                if (masterState.engineers.some(eng => eng.toLowerCase() === name.toLowerCase())) {
+                    showToast(`"${name}" is already in the list.`, 'error');
+                    return;
+                }
+
+                masterState.engineers.push(name);
+                populateEngineerDropdowns();
+                document.getElementById('field-engineer').value = name;
+                await saveToStorage(false);
+                closeModals();
+                showToast(`Added "${name}" to Engineer dropdown!`, 'success');
+            });
+
+            document.getElementById('csv-file-input').addEventListener('change', handleCSVFileImport);
+
+            document.getElementById('filter-search').addEventListener('input', renderMasterTable);
+            document.getElementById('filter-date').addEventListener('change', renderMasterTable);
+            document.getElementById('filter-engineer').addEventListener('change', renderMasterTable);
+            document.getElementById('filter-project').addEventListener('change', renderMasterTable);
+            document.getElementById('filter-location').addEventListener('change', renderMasterTable);
+
+            document.getElementById('modal-backdrop').addEventListener('click', (e) => {
+                if (e.target.id === 'modal-backdrop') closeModals();
+            });
+        }
+
+        function generateId() {
+            return 'act_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+        }
+
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function escapeAttr(str) {
+            return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const styles = {
+                success: 'bg-emerald-700 text-white border-emerald-400',
+                error: 'bg-rose-600 text-white border-rose-300',
+                info: 'bg-slate-900 text-white border-blue-500'
+            };
+            const icons = {
+                success: 'check-circle-2',
+                error: 'alert-circle',
+                info: 'info'
+            };
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-xl border-l-4 text-xs sm:text-sm font-semibold transition-all duration-300 transform translate-y-2 opacity-0 ${styles[type] || styles.info}`;
+            toast.innerHTML = `<i data-lucide="${icons[type] || 'info'}" class="w-4 h-4 shrink-0"></i><span>${escapeHTML(message)}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+    </script>
+</body>
+</html>
